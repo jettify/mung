@@ -14,6 +14,7 @@ from keras.layers import Dense, Dropout
 from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
+from keras.layers.normalization import BatchNormalization
 
 
 
@@ -130,8 +131,11 @@ def fit_mlp_model(X_train, y_train, seed=42):
 def baseline_model():
     model = Sequential()
     model.add(Dense(10, input_dim=13, kernel_initializer='normal', activation='relu'))
+    model.add(BatchNormalization())
     model.add(Dense(10, kernel_initializer='normal', activation='relu'))
+    model.add(BatchNormalization())
     model.add(Dense(10, kernel_initializer='normal', activation='relu'))
+    model.add(BatchNormalization())
     model.add(Dense(1, kernel_initializer='normal'))
     # Compile model
     adam = keras.optimizers.Adam()
@@ -145,11 +149,10 @@ def baseline_model():
 def fit_keras_model(X_train, y_train, seed=42):
     # estimator = KerasRegressor(build_fn=baseline_model)
     tuned_parameters = [{
-        'epochs': [256],
-        'batch_size': [32],
+        'epochs': [256, 512],
+        'batch_size': [8, 16, 32],
     }]
-
-    nn = KerasRegressor(build_fn=baseline_model, verbose=0)
+    nn = KerasRegressor(build_fn=baseline_model, verbose=1)
     rgr = GridSearchCV(nn, tuned_parameters, cv=2)
 
     grid_result = rgr.fit(X_train, y_train)
