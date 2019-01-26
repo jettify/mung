@@ -3,7 +3,7 @@
 FLAGS=
 
 flake: checkrst bandit pyroma
-	flake8 mung tests examples setup.py demos
+	flake8 mung tests setup.py demos
 
 test: flake
 	py.test -s -v $(FLAGS) ./tests/

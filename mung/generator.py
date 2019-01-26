@@ -101,12 +101,6 @@ class Munge:
 
         return sampled_data
 
-    def _nearest_sample(self, instance):
-        x = self.X
-        distances = np.linalg.norm(x - instance)
-        idx = np.argmin(distances, axis=None)
-        return self.X[idx, :]
-
 
 def new_seed(seed, increment):
     if seed is None:
