@@ -84,13 +84,13 @@ class Munge:
         sampled_data = self.X[row_ids, :]
         argmin, _ = pairwise_distances(
             sampled_data, self.X, metric='euclidean', axis=1)
-
+        cat_features = set(self.categorical_features)
         for i in range(n_samples):
             nearest_idx = argmin[i]
             nearest = self.X[nearest_idx]
             for feature_idx in range(num_features):
                 if feature_rng.rand() < self.p:
-                    if feature_idx not in self.categorical_features:
+                    if feature_idx not in cat_features:
                         old = sampled_data[i, feature_idx]
                         new = nearest[feature_idx]
                         sd = np.abs(old - new) / self.s
