@@ -1,4 +1,5 @@
 from mung import Munge, KerasRegressionApprox
+from mung.utils import advesarial_validator
 from sklearn import datasets
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
@@ -31,9 +32,29 @@ def test_basic_fit_sample(seed, iris):
     p = 0.85
     s = 0.1
     m = Munge(p=p, s=s, seed=seed)
+    x, _ = iris
+    m.fit(x)
+
+    n_samples = 10
+    new_x = m.sample(n_samples)
+    assert new_x.shape == (n_samples, x.shape[1])
+
+    n_samples = 5000
+    new_x = m.sample(n_samples)
+    assert new_x.shape == (n_samples, x.shape[1])
+
+
+def test_iris_with_advesarial_validator(seed, iris):
+    p = 0.5
+    s = 0.05
+    m = Munge(p=p, s=s, seed=seed)
     X, _ = iris
     m.fit(X)
 
+    n_samples = X.shape[0]
+    X_new = m.sample(n_samples)
+    score = advesarial_validator(X, X_new, seed=seed)
+    assert score > 0.4 and score < 0.6, score
     n_samples = 10
     new_X = m.sample(n_samples)
     assert new_X.shape == (n_samples, X.shape[1])
