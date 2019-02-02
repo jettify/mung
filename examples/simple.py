@@ -15,6 +15,7 @@ from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from keras.layers.normalization import BatchNormalization
+import lightgbm as lgb
 
 
 
@@ -73,6 +74,23 @@ def fit_gbr_model(X_train, y_train, seed=42):
         GradientBoostingRegressor(), tuned_parameters, cv=5)
     grid_result = clf.fit(X_train, y_train)
     print("GBR Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+    return clf
+
+
+def fit_lgbm_model(X_train, y_train, seed=42):
+    clf = lgb.LGBMRegressor()
+    params = {
+        'n_estimators': [200],
+        'learning_rate': [0.1],
+        'n_iter_no_change': [500],
+        'max_depth': [3],
+        'min_samples_split': [2],
+        'random_state': [seed],
+    }
+    clf = GridSearchCV(
+        GradientBoostingRegressor(), params, cv=5)
+    grid_result = clf.fit(X_train, y_train)
+    print("LGBM Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
     return clf
 
 
