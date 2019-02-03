@@ -1,4 +1,19 @@
 import numpy as np
+np.random.seed(42)
+from tensorflow import set_random_seed
+set_random_seed(42)
+
+import random as rn
+rn.seed(12345)
+
+import tensorflow as tf
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,
+                              inter_op_parallelism_threads=1)
+
+from keras import backend as K
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+K.set_session(sess)
+
 from mung import Munge
 from mung import KerasRegressionApprox
 from sklearn.ensemble import GradientBoostingRegressor
@@ -23,27 +38,29 @@ def main():
     seed = 42
     X_train, y_train, X_test, y_test = load_data()
 
-    gbr = fit_gbr_model(X_train, y_train, seed=seed)
+    # gbr = fit_gbr_model(X_train, y_train, seed=seed)
+    # gbr_mse = mean_squared_error(y_test, gbr.predict(X_test))
+    # print(f'GBR: {gbr_mse}')
+
+    lgbm = fit_lgbm_model(X_train, y_train, seed=seed)
+    lgbm_mse = mean_squared_error(y_test, lgbm.predict(X_test))
+    print(f'LGBM: {lgbm_mse}')
 
     # nn_keras = fit_keras_model(X_train, y_train, seed=seed)
-    nn_keras_approx = fit_nn_keras_approx(gbr, X_train, y_train, seed=seed)
-
-    nn = fit_mlp_model(X_train, y_train, seed=seed)
-    nn_a = nn_approx(gbr, X_train, y_train, seed=seed)
-
-
-    gbr_mse = mean_squared_error(y_test, gbr.predict(X_test))
-
-    nn_mse = mean_squared_error(y_test, nn.predict(X_test))
-    nn_a_mse = mean_squared_error(y_test, nn_a.predict(X_test))
-
-    #nn_keras_mse = mean_squared_error(y_test, nn_keras.predict(X_test))
+    # nn_keras_mse = mean_squared_error(y_test, nn_keras.predict(X_test))
+    # print(f'NN Keras: {nn_keras_mse}')
+    # print(f'GBR: {gbr_mse}')
+    nn_keras_approx = fit_nn_keras_approx(lgbm, X_train, y_train, seed=seed)
     nn_keras_approx_mse = mean_squared_error(y_test, nn_keras_approx.predict(X_test))
-
-    print(f'GBR: {gbr_mse}')
-    print(f'NN: {nn_mse}')
-    print(f'NN Approx: {nn_a_mse}')
     print(f'NN Keras Approx: {nn_keras_approx_mse}')
+
+    # nn = fit_mlp_model(X_train, y_train, seed=seed)
+    # nn_a = nn_approx(gbr, X_train, y_train, seed=seed)
+    # nn_mse = mean_squared_error(y_test, nn.predict(X_test))
+    # nn_a_mse = mean_squared_error(y_test, nn_a.predict(X_test))
+    # print(f'NN: {nn_mse}')
+    # print(f'NN Approx: {nn_a_mse}')
+
 
 
 def load_data(seed=42):
@@ -61,7 +78,6 @@ def load_data(seed=42):
 
 
 def fit_gbr_model(X_train, y_train, seed=42):
-
     tuned_parameters = [{
         'n_estimators': [100, 500],
         'max_depth': [2, 3],
@@ -111,7 +127,7 @@ def nn_approx(clf, X_train, y_train, seed=42):
 
 def fit_nn_keras_approx(clf, X_train, y_train, seed=42):
     tuned_parameters = [{
-        'sample_multiplier': [20],
+        'sample_multiplier': [40],
         'epochs': [256],
         'batch_size': [32],
         'random_state': [seed],
@@ -119,11 +135,22 @@ def fit_nn_keras_approx(clf, X_train, y_train, seed=42):
         'hidden_layer_size': [10],
     }]
 
-    nn = KerasRegressionApprox(clf)
-    rgr = GridSearchCV(nn, tuned_parameters, cv=2)
-    grid_result = rgr.fit(X_train, y_train)
-    print("Keras Approx Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-    return rgr
+    # nn = KerasRegressionApprox(clf)
+    # rgr = GridSearchCV(nn, tuned_parameters, cv=2)
+    # grid_result = rgr.fit(X_train, y_train)
+    nn = KerasRegressionApprox(
+        clf,
+        p=0.9,
+        s=2,
+        sample_multiplier=100,
+        epochs=int(256),
+        batch_size=256*4,
+        random_state=seed,
+        hidden_layer_size=10,
+    )
+    nn.fit(X_train, y_train, shuffle=False)
+    # print("Keras Approx Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+    return nn
 
 
 def fit_mlp_model(X_train, y_train, seed=42):
@@ -158,9 +185,7 @@ def baseline_model():
     # Compile model
     adam = keras.optimizers.Adam()
     model.compile(loss='mean_squared_error', optimizer=adam)
-    import ipdb
-    ipdb.set_trace()
-    model.summary()
+    # model.summary()
     return model
 
 
