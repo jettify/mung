@@ -17,38 +17,35 @@ def make_model(
         activation='relu',
         loss='mean_squared_error',
         optimizer_params=None,
-        hidden_layer_size=None):
+        hidden_layer_size=None,
+        seed=42):
 
     hidden_size = hidden_layer_size or int(input_size * 0.75)
     model = Sequential()
     model.add(Dense(
-        hidden_size, input_dim=input_size,
-        kernel_initializer='normal',
+        hidden_size,
+        input_dim=input_size,
+        kernel_initializer='uniform',
         activation=activation,
         use_bias=False,
     ))
     model.add(BatchNormalization())
+
     model.add(Dense(
         hidden_size,
-        kernel_initializer='normal',
+        kernel_initializer='uniform',
         activation=activation,
         use_bias=False,
     ))
     model.add(BatchNormalization())
-    model.add(Dense(
-        hidden_size,
-        kernel_initializer='normal',
-        activation=activation,
-        use_bias=False,
-    ))
-    model.add(BatchNormalization())
-    model.add(
-        Dense(1, kernel_initializer='normal')
-    )
+
+    model.add(Dense(1, kernel_initializer='uniform'))
+
     # Compile model
-    optimizer_params = optimizer_params or {}
-    adam = Adam(**optimizer_params)
-    model.compile(loss=loss, optimizer=adam)
+    # optimizer_params = optimizer_params or {'decay': 0.000001, 'amsgrad': False}
+    # adam = Adam(**optimizer_params)
+    opt = SGD(lr=0.0005, momentum=0.0, decay=0.0, nesterov=True)
+    model.compile(loss=loss, optimizer=opt)
     model.summary()
     return model
 
