@@ -6,7 +6,7 @@ from keras.layers import Dense
 from keras.layers.normalization import BatchNormalization
 
 from keras.models import Sequential
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from keras.wrappers.scikit_learn import KerasRegressor
 
 from .generator import Munge
@@ -52,18 +52,19 @@ def make_model(
 
 class KerasRegressionApprox(BaseEstimator, RegressorMixin):
 
-    def __init__(self,
-                 clf=None,
-                 epochs=128,
-                 batch_size=8,
-                 random_state=None,
-                 activation='relu',
-                 loss='mean_squared_error',
-                 optimizer_params=None,
-                 sample_multiplier=10,
-                 hidden_layer_size=None,
-                 p=0.5,
-                 s=2):
+    def __init__(
+            self,
+            clf=None,
+            epochs=128,
+            batch_size=8,
+            random_state=None,
+            activation='relu',
+            loss='mean_squared_error',
+            optimizer_params=None,
+            sample_multiplier=10,
+            hidden_layer_size=None,
+            p=0.5,
+            s=2):
 
         self.clf = clf
         self.model = None

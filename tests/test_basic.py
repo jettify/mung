@@ -73,13 +73,42 @@ def test_iris_with_advesarial_validator(seed, iris):
     X_new = m.sample(n_samples)
     score = advesarial_validator(X, X_new, seed=seed)
     assert score > 0.4 and score < 0.6, score
+
+
+def test_adult_with_advesarial_validator(seed, adult):
+    p = 0.5
+    s = 1
+    m = Munge(p=p, s=s, seed=seed)
+    X = adult[0]
+    categorical_features = list(range(5, X.shape[1]))
+    m.fit(X, categorical_features=categorical_features)
+
+    n_samples = X.shape[0]
+    X_new = m.sample(n_samples)
+    score = advesarial_validator(
+        X, X_new, categorical_features=categorical_features,
+        seed=seed)
+    print(f's={s} p={p} score={score}')
+    assert score > 0.4 and score < 0.6, score
+
+
+def test_fit_data_with_categoricals(seed, adult):
+    p = 0.85
+    s = 0.1
+    m = Munge(p=p, s=s, seed=seed)
+    x = adult[0]
+    # ['Workclass', 'Marital Status', 'Occupation',
+    #  'Relationship', 'Race', 'Sex', 'Country']
+    categorical_features = [1, 3, 4, 5, 6, 7, 11]
+    m.fit(x, categorical_features=categorical_features)
+
     n_samples = 10
-    new_X = m.sample(n_samples)
-    assert new_X.shape == (n_samples, X.shape[1])
+    new_x = m.sample(n_samples)
+    assert new_x.shape == (n_samples, x.shape[1])
 
     n_samples = 5000
-    new_X = m.sample(n_samples)
-    assert new_X.shape == (n_samples, X.shape[1])
+    new_x = m.sample(n_samples)
+    assert new_x.shape == (n_samples, x.shape[1])
 
 
 def test_keras_regressor(boston, seed):
