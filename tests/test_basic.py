@@ -1,3 +1,5 @@
+import numpy as np
+
 from mung import Munge, KerasRegressionApprox
 from mung.utils import advesarial_validator
 from sklearn import datasets
@@ -42,6 +44,22 @@ def test_basic_fit_sample(seed, iris):
     n_samples = 5000
     new_x = m.sample(n_samples)
     assert new_x.shape == (n_samples, x.shape[1])
+
+
+def test_dataset_generation_constensy(iris):
+    x, _ = iris
+    p = 0.90
+    s = 0.15
+    n_samples = 5000
+    for seed in [1, 42, 128]:
+        m1 = Munge(p=p, s=s, seed=seed)
+        m1.fit(x)
+        new_x1 = m1.sample(n_samples)
+
+        m2 = Munge(p=p, s=s, seed=seed)
+        m2.fit(x)
+        new_x2 = m2.sample(n_samples)
+        assert np.allclose(new_x1, new_x2)
 
 
 def test_iris_with_advesarial_validator(seed, iris):
