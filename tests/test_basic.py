@@ -1,7 +1,7 @@
 import numpy as np
 
 from mung import Munge, KerasRegressionApprox
-from mung.utils import advesarial_validator
+from mung.utils import advesarial_validator, ScaledFreqEncoder
 from sklearn import datasets
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
@@ -76,8 +76,8 @@ def test_iris_with_advesarial_validator(seed, iris):
 
 
 def test_adult_with_advesarial_validator(seed, adult):
-    p = 0.5
-    s = 1
+    p = 0.4
+    s = 2
     m = Munge(p=p, s=s, seed=seed)
     X = adult[0]
     categorical_features = list(range(5, X.shape[1]))
@@ -89,7 +89,7 @@ def test_adult_with_advesarial_validator(seed, adult):
         X, X_new, categorical_features=categorical_features,
         seed=seed)
     print(f's={s} p={p} score={score}')
-    assert score > 0.4 and score < 0.6, score
+    assert score > 0.4 and score < 0.7, score
 
 
 def test_fit_data_with_categoricals(seed, adult):

@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.metrics import pairwise_distances_chunked
 from sklearn.metrics.pairwise import check_pairwise_arrays
+from .utils import ScaledFreqEncoder
 
 
 def argmink(arr, k=1):
@@ -39,6 +40,7 @@ class Munge:
         self.X = None
         self.categorical_features = []
         self.seed = seed
+        self.freq_enc = None
 
     def fit(self, X, categorical_features=None):
         """Estimate model parameters with the Munge algorithm.
@@ -56,6 +58,8 @@ class Munge:
         if categorical_features:
             self.categorical_features = categorical_features
         self.X = X
+        self.freq_enc = ScaledFreqEncoder(self.categorical_features)
+        self.freq_enc.fit(X)
         return self
 
     def sample(self, n_samples=1):
@@ -71,9 +75,14 @@ class Munge:
             Randomly generated sample
         return self.X
         """
-        rows = self.X.shape[0]
+
+        X = self.freq_enc.transform(self.X)
+        cat_features = set(self.categorical_features)
+        cat_features = set()
+
+        rows = X.shape[0]
         replace = rows < n_samples
-        num_features = self.X.shape[1]
+        num_features = X.shape[1]
 
         sample_rng = np.random.RandomState(new_seed(self.seed, 0))
         feature_rng = np.random.RandomState(new_seed(self.seed, 1))
@@ -81,13 +90,12 @@ class Munge:
 
         row_ids = sample_rng.choice(rows, n_samples, replace=replace)
 
-        sampled_data = self.X[row_ids, :]
+        sampled_data = X[row_ids, :]
         argmin, _ = pairwise_distances(
-            sampled_data, self.X, metric='euclidean', axis=1)
-        cat_features = set(self.categorical_features)
+            sampled_data, X, metric='euclidean', axis=1)
         for i in range(n_samples):
             nearest_idx = argmin[i]
-            nearest = self.X[nearest_idx]
+            nearest = X[nearest_idx]
             for feature_idx in range(num_features):
                 if feature_rng.rand() < self.p:
                     if feature_idx not in cat_features:
@@ -98,8 +106,7 @@ class Munge:
                             new, sd)
                     else:
                         sampled_data[i, feature_idx] = new
-
-        return sampled_data
+        return self.freq_enc.inverse_transform(sampled_data)
 
 
 def new_seed(seed, increment):
