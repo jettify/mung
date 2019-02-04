@@ -68,7 +68,6 @@ def adult(seed):
     pipeline = make_pipeline(
         SimpleImputer(strategy='constant', fill_value='na'),
         OrdinalEncoder(),
-        OneHotEncoder(),
     )
     X = X[nums + cats]
     print(cats)
