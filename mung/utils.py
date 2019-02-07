@@ -20,7 +20,6 @@ def make_advesarial_dataset(X_train, X_train_new, seed=None):
 
 def advesarial_validator(
         X_train, X_train_new, categorical_features=None, seed=None):
-    categorical_features = categorical_features or 'auto'
     X, y = make_advesarial_dataset(X_train, X_train_new, seed=seed)
 
     params = {

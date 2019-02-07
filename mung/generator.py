@@ -1,7 +1,15 @@
+from enum import Enum
+
 import numpy as np
 from sklearn.metrics import pairwise_distances_chunked
 from sklearn.metrics.pairwise import check_pairwise_arrays
+
 from .utils import ScaledFreqEncoder
+
+
+class EncodingType(str, Enum):
+    ONE_HOT = 'one_hot'
+    FREQUENCY = 'frequency'
 
 
 def argmink(arr, k=1):
@@ -39,6 +47,7 @@ class Munge:
 
         self.X = None
         self.categorical_features = []
+        self.binary_categoricals = []
         self.seed = seed
         self.freq_enc = None
 
@@ -55,11 +64,17 @@ class Munge:
         -------
         self
         """
-        if categorical_features:
-            self.categorical_features = categorical_features
+        categorical_features = categorical_features or []
+        for cat_id in categorical_features:
+            if len(np.unique(X[:, cat_id])) <= 2:
+                self.binary_categoricals.append(cat_id)
+            else:
+                self.categorical_features.append(cat_id)
+
         self.X = X
-        self.freq_enc = ScaledFreqEncoder(self.categorical_features)
-        self.freq_enc.fit(X)
+        if self.categorical_features:
+            self.freq_enc = ScaledFreqEncoder(self.categorical_features)
+            self.freq_enc.fit(X)
         return self
 
     def sample(self, n_samples=1):
@@ -76,9 +91,12 @@ class Munge:
         return self.X
         """
 
-        X = self.freq_enc.transform(self.X)
-        cat_features = set(self.categorical_features)
-        cat_features = set()
+        if self.categorical_features:
+            X = self.freq_enc.transform(self.X)
+        else:
+            X = self.X
+
+        binary_cats = set(self.binary_categoricals)
 
         rows = X.shape[0]
         replace = rows < n_samples
@@ -98,7 +116,7 @@ class Munge:
             nearest = X[nearest_idx]
             for feature_idx in range(num_features):
                 if feature_rng.rand() < self.p:
-                    if feature_idx not in cat_features:
+                    if feature_idx not in binary_cats:
                         old = sampled_data[i, feature_idx]
                         new = nearest[feature_idx]
                         sd = np.abs(old - new) / self.s
@@ -106,7 +124,10 @@ class Munge:
                             new, sd)
                     else:
                         sampled_data[i, feature_idx] = new
-        return self.freq_enc.inverse_transform(sampled_data)
+
+        if self.categorical_features:
+            sampled_data = self.freq_enc.inverse_transform(sampled_data)
+        return sampled_data
 
 
 def new_seed(seed, increment):
