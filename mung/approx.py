@@ -6,7 +6,7 @@ from keras.layers import Dense
 from keras.layers.normalization import BatchNormalization
 
 from keras.models import Sequential
-from keras.optimizers import Adam, SGD
+from keras.optimizers import SGD
 from keras.wrappers.scikit_learn import KerasRegressor
 
 from .generator import Munge
@@ -41,9 +41,6 @@ def make_model(
 
     model.add(Dense(1, kernel_initializer='uniform'))
 
-    # Compile model
-    # optimizer_params = optimizer_params or {'decay': 0.000001, 'amsgrad': False}
-    # adam = Adam(**optimizer_params)
     opt = SGD(lr=0.0005, momentum=0.0, decay=0.0, nesterov=True)
     model.compile(loss=loss, optimizer=opt)
     model.summary()

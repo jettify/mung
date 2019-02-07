@@ -1,10 +1,8 @@
 import numpy as np
 import lightgbm as lgb
 
-from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import GridSearchCV
 from sklearn.utils import shuffle
-from sklearn.metrics import pairwise_distances_argmin
 
 
 def make_advesarial_dataset(X_train, X_train_new, seed=None):
@@ -32,50 +30,3 @@ def advesarial_validator(
     grid = GridSearchCV(clf, params, scoring='roc_auc', cv=3)
     grid_result = grid.fit(X, y)
     return grid_result.best_score_
-
-
-class ScaledFreqEncoder(BaseEstimator, TransformerMixin):
-
-    def __init__(self, categories='auto', dtype=np.float64):
-        self.categories = categories
-        self.dtype = dtype
-        self._cat_freq = {}
-        self._freq_cat = {}
-
-    def fit(self, X, y=None):
-        for cat_id in self.categories:
-            unique, counts = np.unique(X[:, cat_id], return_counts=True)
-            self._cat_freq[cat_id] = {}
-            self._freq_cat[cat_id] = {}
-            for u, c in zip(unique, counts):
-                if c in self._freq_cat[cat_id]:
-                    while c in self._freq_cat[cat_id]:
-                        c += 1
-
-                self._cat_freq[cat_id][u] = c
-                self._freq_cat[cat_id][c] = u
-
-    def transform(self, X):
-        X_new = X.copy()
-        for cat_id, table in self._cat_freq.items():
-            max_ = sum(table.values())
-            for val, freq in table.items():
-                X_new[X[:, cat_id] == val, cat_id] = freq / max_
-
-        return X_new
-
-    def inverse_transform(self, X):
-        X_new = X.copy()
-        for cat_id, table in self._cat_freq.items():
-            freqs = np.array(list(self._cat_freq[cat_id].values()))
-
-            max_ = sum(table.values())
-            X[:, cat_id] = X[:, cat_id] * max_
-            r = pairwise_distances_argmin(
-                X_new[:, cat_id].reshape(-1, 1) * max_,
-                freqs.reshape(-1, 1)
-            )
-            for val, freq in table.items():
-                X_new[freqs[r] == freq, cat_id] = self._freq_cat[cat_id][freq]
-
-        return X_new

@@ -1,42 +1,13 @@
 from enum import Enum
 
 import numpy as np
-from sklearn.metrics import pairwise_distances_chunked
-from sklearn.metrics.pairwise import check_pairwise_arrays
 
-from .utils import ScaledFreqEncoder
+from .helpers import ScaledFreqEncoder, pairwise_distances
 
 
 class EncodingType(str, Enum):
     ONE_HOT = 'one_hot'
     FREQUENCY = 'frequency'
-
-
-def argmink(arr, k=1):
-    return np.argpartition(arr, k, axis=0)[k]
-
-
-def _argmin_min_reduce(dist, start):
-    indices = np.apply_along_axis(argmink, 1, dist)
-    values = dist[np.arange(dist.shape[0]), indices]
-    return indices, values
-
-
-def pairwise_distances(X, Y, axis=1, metric="euclidean", metric_kwargs=None):
-    X, Y = check_pairwise_arrays(X, Y)
-
-    if metric_kwargs is None:
-        metric_kwargs = {}
-
-    if axis == 0:
-        X, Y = Y, X
-
-    indices, values = zip(*pairwise_distances_chunked(
-        X, Y, reduce_func=_argmin_min_reduce, metric=metric,
-        **metric_kwargs))
-    indices = np.concatenate(indices)
-    values = np.concatenate(values)
-    return indices, values
 
 
 class Munge:
@@ -118,9 +89,9 @@ class Munge:
         replace = rows < n_samples
         num_features = X.shape[1]
 
-        sample_rng = np.random.RandomState(new_seed(self.seed, 0))
-        feature_rng = np.random.RandomState(new_seed(self.seed, 1))
-        value_rng = np.random.RandomState(new_seed(self.seed, 2))
+        sample_rng = np.random.RandomState(_new_seed(self.seed, 0))
+        feature_rng = np.random.RandomState(_new_seed(self.seed, 1))
+        value_rng = np.random.RandomState(_new_seed(self.seed, 2))
 
         row_ids = sample_rng.choice(rows, n_samples, replace=replace)
 
@@ -146,7 +117,7 @@ class Munge:
         return sampled_data
 
 
-def new_seed(seed, increment):
+def _new_seed(seed, increment):
     if seed is None:
         return None
     return seed + increment
