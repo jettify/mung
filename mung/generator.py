@@ -41,7 +41,15 @@ def pairwise_distances(X, Y, axis=1, metric="euclidean", metric_kwargs=None):
 
 class Munge:
 
-    def __init__(self, *, p=0.8, s=1, seed=None):
+    def __init__(
+            self, *,
+            p=0.8,
+            s=1,
+            binary_categoricals_ecoding=EncodingType.ONE_HOT,
+            seed=None):
+        self._binary_cats_ecoding = EncodingType(binary_categoricals_ecoding)
+        self._validate_params(s, p)
+
         self.p: float = p
         self.s: float = s
 
@@ -49,7 +57,14 @@ class Munge:
         self.categorical_features = []
         self.binary_categoricals = []
         self.seed = seed
-        self.freq_enc = None
+        self._freq_enc = None
+
+    def _validate_params(self, s, p):
+        if p < 0.0 or p > 1.0:
+            raise ValueError('xxx')
+
+        if s <= 0:
+            raise ValueError('xxx')
 
     def fit(self, X, categorical_features=None):
         """Estimate model parameters with the Munge algorithm.
@@ -65,16 +80,17 @@ class Munge:
         self
         """
         categorical_features = categorical_features or []
+        is_binary = self._binary_cats_ecoding == EncodingType.ONE_HOT
         for cat_id in categorical_features:
-            if len(np.unique(X[:, cat_id])) <= 2:
+            if is_binary and len(np.unique(X[:, cat_id])) <= 2:
                 self.binary_categoricals.append(cat_id)
             else:
                 self.categorical_features.append(cat_id)
 
         self.X = X
         if self.categorical_features:
-            self.freq_enc = ScaledFreqEncoder(self.categorical_features)
-            self.freq_enc.fit(X)
+            self._freq_enc = ScaledFreqEncoder(self.categorical_features)
+            self._freq_enc.fit(X)
         return self
 
     def sample(self, n_samples=1):
@@ -92,7 +108,7 @@ class Munge:
         """
 
         if self.categorical_features:
-            X = self.freq_enc.transform(self.X)
+            X = self._freq_enc.transform(self.X)
         else:
             X = self.X
 
@@ -126,7 +142,7 @@ class Munge:
                         sampled_data[i, feature_idx] = new
 
         if self.categorical_features:
-            sampled_data = self.freq_enc.inverse_transform(sampled_data)
+            sampled_data = self._freq_enc.inverse_transform(sampled_data)
         return sampled_data
 
 
