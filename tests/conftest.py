@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.datasets import load_boston
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from sklearn.compose import make_column_transformer
@@ -72,6 +72,7 @@ def adult(seed):
     X = X[nums + cats]
     print(cats)
     print(nums)
+
     transformer = make_column_transformer(
         (MinMaxScaler(), nums),
         (pipeline, cats),
