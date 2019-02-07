@@ -88,7 +88,6 @@ def test_adult_with_advesarial_validator(seed, adult):
     score = advesarial_validator(
         X, X_new, categorical_features=categorical_features,
         seed=seed)
-    print(f's={s} p={p} score={score}')
     assert score > 0.4 and score < 0.7, score
 
 
