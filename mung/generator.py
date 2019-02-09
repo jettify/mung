@@ -32,10 +32,10 @@ class Munge:
 
     def _validate_params(self, s, p):
         if p < 0.0 or p > 1.0:
-            raise ValueError('xxx')
+            raise ValueError('Tunning parameter p should be from 0.0 to 1.0')
 
         if s <= 0:
-            raise ValueError('xxx')
+            raise ValueError('Tunning parameter s should be greater then 0')
 
     def fit(self, X, categorical_features=None):
         """Estimate model parameters with the Munge algorithm.
