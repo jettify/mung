@@ -61,7 +61,7 @@ def adult(seed):
     # redundant with Education-Num
     exclude = ['Education', 'fnlwgt', 'Target']
     X = raw_data.drop(exclude, axis=1)
-    y = raw_data['Target'] == ' >50K'
+    y = (raw_data['Target'] == '>50K').astype(int)
 
     cats = [d[0] for d in dtypes if d[1] == 'category' and d[0] not in exclude]
     nums = [d[0] for d in dtypes if d[1] != 'category' and d[0] not in exclude]
@@ -70,8 +70,6 @@ def adult(seed):
         OrdinalEncoder(),
     )
     X = X[nums + cats]
-    print(cats)
-    print(nums)
 
     transformer = make_column_transformer(
         (MinMaxScaler(), nums),
