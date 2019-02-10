@@ -77,3 +77,7 @@ def pairwise_distances(X, Y, axis=1, metric="euclidean", metric_kwargs=None):
     indices = np.concatenate(indices)
     values = np.concatenate(values)
     return indices, values
+
+
+def logit(x):
+    return - np.log(1 / x - 1)
