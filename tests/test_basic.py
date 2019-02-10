@@ -123,10 +123,11 @@ def test_keras_regressor(boston, seed):
     gbr = GradientBoostingRegressor(
         n_estimators=500, max_depth=3, random_state=seed)
     gbr.fit(X_train, y_train)
-
     kr = KerasRegressionApprox(
         gbr, sample_multiplier=2, epochs=16, batch_size=8)
-    kr.fit(X_train, y_train)
+
+    categorical_features = None
+    kr.fit(X_train, y_train, categorical_features)
     kr.predict(X_test)
 
     keras_approx_mse = mean_squared_error(y_test, kr.predict(X_test))
