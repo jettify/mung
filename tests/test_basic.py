@@ -151,7 +151,7 @@ def test_keras_classificator(adult, seed):
     kc.fit(X_train, y_train)
 
     keras_approx_logloss = log_loss(y_test, kc.predict(X_test))
-    clf_logloss = log_loss(y_test, clf.predict(X_test))
+    clf_logloss = log_loss(y_test, clf.predict_proba(X_test)[:, 1])
     assert clf_logloss < keras_approx_logloss
 
 
