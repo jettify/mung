@@ -147,7 +147,7 @@ def test_keras_classificator(adult, seed):
     clf.fit(X_train, y_train)
 
     kc = KerasClassifictionApprox(
-        clf, sample_multiplier=2, epochs=10, batch_size=2000)
+        clf, sample_multiplier=2, epochs=20, batch_size=4000)
     kc.fit(X_train, y_train)
 
     keras_approx_logloss = log_loss(y_test, kc.predict(X_test))
