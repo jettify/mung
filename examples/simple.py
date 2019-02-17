@@ -15,8 +15,8 @@ sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
 K.set_session(sess)
 
 from mung import Munge
-from mung import KerasRegressionApprox
-from sklearn.ensemble import GradientBoostingRegressor
+from mung.approx import KerasRegressionApprox
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.datasets import load_boston
 from sklearn.utils import shuffle
 from sklearn.preprocessing import MinMaxScaler
@@ -38,13 +38,17 @@ def main():
     seed = 42
     X_train, y_train, X_test, y_test = load_data()
 
-    # gbr = fit_gbr_model(X_train, y_train, seed=seed)
-    # gbr_mse = mean_squared_error(y_test, gbr.predict(X_test))
-    # print(f'GBR: {gbr_mse}')
+    gbr = fit_gbr_model(X_train, y_train, seed=seed)
+    gbr_mse = mean_squared_error(y_test, gbr.predict(X_test))
+    print(f'GBR: {gbr_mse}')
 
     lgbm = fit_lgbm_model(X_train, y_train, seed=seed)
     lgbm_mse = mean_squared_error(y_test, lgbm.predict(X_test))
     print(f'LGBM: {lgbm_mse}')
+
+    rf = fit_rf_model(X_train, y_train, seed=seed)
+    lgbm_mse = mean_squared_error(y_test, rf.predict(X_test))
+    print(f'RF: {lgbm_mse}')
 
     # nn_keras = fit_keras_model(X_train, y_train, seed=seed)
     # nn_keras_mse = mean_squared_error(y_test, nn_keras.predict(X_test))
@@ -90,6 +94,21 @@ def fit_gbr_model(X_train, y_train, seed=42):
         GradientBoostingRegressor(), tuned_parameters, cv=5)
     grid_result = clf.fit(X_train, y_train)
     print("GBR Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+    return clf
+
+
+def fit_rf_model(X_train, y_train, seed=42):
+    clf = RandomForestRegressor()
+    params = {
+        'n_estimators': [100],
+        'min_samples_leaf': [1, 2, 4, 8],
+        'min_samples_split': [2, 5, 10],
+        'random_state': [seed],
+        'bootstrap': [True, False],
+    }
+    clf = GridSearchCV(clf, params, cv=5)
+    grid_result = clf.fit(X_train, y_train)
+    print("RF Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
     return clf
 
 
