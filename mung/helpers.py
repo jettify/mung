@@ -6,7 +6,7 @@ from sklearn.metrics import pairwise_distances_chunked
 from sklearn.metrics.pairwise import check_pairwise_arrays
 
 
-class ScaledFreqEncoder(BaseEstimator, TransformerMixin):
+class FreqEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(self):
         self.categories = None
@@ -14,7 +14,9 @@ class ScaledFreqEncoder(BaseEstimator, TransformerMixin):
         self._freq_cat = {}
 
     def fit(self, X, y=None, categorical_features=None):
-        self.categories = categorical_features or []
+        cats = categorical_features
+        self.categories = cats if cats is not None else list(range(X.shape[1]))
+
         for cat_id in self.categories:
             unique, counts = np.unique(X[:, cat_id], return_counts=True)
             self._cat_freq[cat_id] = {}
@@ -30,9 +32,8 @@ class ScaledFreqEncoder(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X_new = X.copy()
         for cat_id, table in self._cat_freq.items():
-            max_ = sum(table.values())
             for val, freq in table.items():
-                X_new[X[:, cat_id] == val, cat_id] = freq / max_
+                X_new[X[:, cat_id] == val, cat_id] = freq
 
         return X_new
 
@@ -41,10 +42,8 @@ class ScaledFreqEncoder(BaseEstimator, TransformerMixin):
         for cat_id, table in self._cat_freq.items():
             freqs = np.array(list(self._cat_freq[cat_id].values()))
 
-            max_ = sum(table.values())
-            X[:, cat_id] = X[:, cat_id] * max_
             r = pairwise_distances_argmin(
-                X_new[:, cat_id].reshape(-1, 1) * max_,
+                X_new[:, cat_id].reshape(-1, 1),
                 freqs.reshape(-1, 1)
             )
             for freq in table.values():

@@ -1,7 +1,7 @@
 import numpy as np
 
 from mung import Munge, EncodingType
-from mung.helpers import ScaledFreqEncoder
+from mung.helpers import FreqEncoder
 from mung.utils import advesarial_validator
 
 
@@ -115,7 +115,7 @@ def test_freq(adult, seed):
     #  'Relationship', 'Race', 'Sex', 'Country']
     X = adult[0]
     categorical_features = [5, 6, 7, 8, 9, 10, 11]
-    freq_encoder = ScaledFreqEncoder()
+    freq_encoder = FreqEncoder()
     freq_encoder.fit(X, categorical_features=categorical_features)
     X_encoded = freq_encoder.transform(X)
     X_reverted = freq_encoder.inverse_transform(X_encoded)
@@ -124,7 +124,7 @@ def test_freq(adult, seed):
 
 def test_scaled_freq_encocer(seed):
     X = np.array([[1.0], [1.0], [1.0], [2.0], [2.0], [3.0], [.0]])
-    encoder = ScaledFreqEncoder()
+    encoder = FreqEncoder()
     encoder.fit(X, categorical_features=[0])
     encoded = encoder.transform(X)
     X_reverted = encoder.inverse_transform(encoded)

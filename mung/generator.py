@@ -1,8 +1,9 @@
 from enum import Enum
 
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
-from .helpers import ScaledFreqEncoder, pairwise_distances
+from .helpers import FreqEncoder, pairwise_distances
 
 
 class EncodingType(str, Enum):
@@ -29,6 +30,7 @@ class Munge:
         self.binary_categoricals = []
         self.seed = seed
         self._freq_enc = None
+        self._scaler = None
 
     def _validate_params(self, s, p):
         if p < 0.0 or p > 1.0:
@@ -51,6 +53,7 @@ class Munge:
         self
         """
         categorical_features = categorical_features or []
+
         is_binary = self._binary_cats_ecoding == EncodingType.ONE_HOT
         for cat_id in categorical_features:
             if is_binary and len(np.unique(X[:, cat_id])) <= 2:
@@ -58,12 +61,15 @@ class Munge:
             else:
                 self.categorical_features.append(cat_id)
 
-        self.X = X
         if self.categorical_features:
-            self._freq_enc = ScaledFreqEncoder()
+            self._freq_enc = FreqEncoder()
             self._freq_enc.fit(
                 X,
                 categorical_features=self.categorical_features)
+            X = self._freq_enc.transform(X)
+
+        self._scaler = MinMaxScaler()
+        self.X = self._scaler.fit_transform(X)
         return self
 
     def sample(self, n_samples=1):
@@ -80,11 +86,7 @@ class Munge:
         return self.X
         """
 
-        if self.categorical_features:
-            X = self._freq_enc.transform(self.X)
-        else:
-            X = self.X
-
+        X = self.X
         binary_cats = set(self.binary_categoricals)
 
         rows = X.shape[0]
@@ -114,9 +116,10 @@ class Munge:
                     else:
                         sampled_data[i, feature_idx] = new
 
+        x_new = self._scaler.inverse_transform(sampled_data)
         if self.categorical_features:
-            sampled_data = self._freq_enc.inverse_transform(sampled_data)
-        return sampled_data
+            x_new = self._freq_enc.inverse_transform(x_new)
+        return x_new
 
 
 def _new_seed(seed, increment):
