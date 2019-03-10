@@ -8,7 +8,6 @@ from sklearn.impute import SimpleImputer
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.utils import shuffle
 
@@ -47,10 +46,6 @@ def load_boston(seed=None):
     offset = int(X.shape[0] * 0.6)
     X_train, y_train = X[:offset], y[:offset]
     X_test, y_test = X[offset:], y[offset:]
-
-    scaler = MinMaxScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
     return X_train, y_train, X_test, y_test
 
 
@@ -93,10 +88,11 @@ def load_adult(seed=None):
     X = X[nums + cats]
 
     transformer = make_column_transformer(
-        (MinMaxScaler(), nums),
         (pipeline, cats),
-        remainder='drop',
+        remainder='passthrough',
+        sparse_threshold=0,
     )
+
     X = transformer.fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.6, random_state=seed)
