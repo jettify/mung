@@ -160,8 +160,8 @@ def test_freq(adult, seed):
     #  'Relationship', 'Race', 'Sex', 'Country']
     X = adult[0]
     categorical_features = [5, 6, 7, 8, 9, 10, 11]
-    freq_encoder = ScaledFreqEncoder(categorical_features)
-    freq_encoder.fit(X)
+    freq_encoder = ScaledFreqEncoder()
+    freq_encoder.fit(X, categorical_features=categorical_features)
     X_encoded = freq_encoder.transform(X)
     X_reverted = freq_encoder.inverse_transform(X_encoded)
     assert np.allclose(X, X_reverted)
@@ -169,8 +169,8 @@ def test_freq(adult, seed):
 
 def test_scaled_freq_encocer(seed):
     X = np.array([[1.0], [1.0], [1.0], [2.0], [2.0], [3.0], [.0]])
-    encoder = ScaledFreqEncoder(categories=[0])
-    encoder.fit(X)
+    encoder = ScaledFreqEncoder()
+    encoder.fit(X, categorical_features=[0])
     encoded = encoder.transform(X)
     X_reverted = encoder.inverse_transform(encoded)
     assert np.allclose(X, X_reverted)

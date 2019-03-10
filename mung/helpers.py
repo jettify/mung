@@ -8,13 +8,13 @@ from sklearn.metrics.pairwise import check_pairwise_arrays
 
 class ScaledFreqEncoder(BaseEstimator, TransformerMixin):
 
-    def __init__(self, categories='auto', dtype=np.float64):
-        self.categories = categories
-        self.dtype = dtype
+    def __init__(self):
+        self.categories = None
         self._cat_freq = {}
         self._freq_cat = {}
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, categorical_features=None):
+        self.categories = categorical_features or []
         for cat_id in self.categories:
             unique, counts = np.unique(X[:, cat_id], return_counts=True)
             self._cat_freq[cat_id] = {}

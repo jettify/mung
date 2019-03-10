@@ -60,8 +60,10 @@ class Munge:
 
         self.X = X
         if self.categorical_features:
-            self._freq_enc = ScaledFreqEncoder(self.categorical_features)
-            self._freq_enc.fit(X)
+            self._freq_enc = ScaledFreqEncoder()
+            self._freq_enc.fit(
+                X,
+                categorical_features=self.categorical_features)
         return self
 
     def sample(self, n_samples=1):
