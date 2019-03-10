@@ -111,7 +111,6 @@ def make_classification_model(
         model,
         loss='binary_crossentropy',
         optimizer_params=None):
-    # loss='binary_crossentropy', optimizer=adam, metrics=['binary_crossentropy', 'accuracy']
     if optimizer_params is None:
         optimizer_params = {
             'lr': 0.005,

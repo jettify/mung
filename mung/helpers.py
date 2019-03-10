@@ -47,7 +47,7 @@ class ScaledFreqEncoder(BaseEstimator, TransformerMixin):
                 X_new[:, cat_id].reshape(-1, 1) * max_,
                 freqs.reshape(-1, 1)
             )
-            for val, freq in table.items():
+            for freq in table.values():
                 X_new[freqs[r] == freq, cat_id] = self._freq_cat[cat_id][freq]
         return X_new
 
@@ -62,7 +62,7 @@ def _argmin_min_reduce(dist, start):
     return indices, values
 
 
-def pairwise_distances(X, Y, axis=1, metric="euclidean", metric_kwargs=None):
+def pairwise_distances(X, Y, axis=1, metric='euclidean', metric_kwargs=None):
     X, Y = check_pairwise_arrays(X, Y)
 
     if metric_kwargs is None:
