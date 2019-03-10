@@ -58,6 +58,19 @@ def test_iris_with_advesarial_validator(seed, iris):
     assert score > 0.4 and score < 0.6, score
 
 
+def test_boston_with_advesarial_validator(seed, boston):
+    p = 0.6
+    s = 3
+    m = Munge(p=p, s=s, seed=seed)
+    X = boston[0]
+    m.fit(X)
+
+    n_samples = X.shape[0]
+    X_new = m.sample(n_samples)
+    score = advesarial_validator(X, X_new, seed=seed)
+    assert score > 0.4 and score < 0.6, score
+
+
 def test_adult_with_advesarial_validator(seed, adult):
     p = 0.4
     s = 2
