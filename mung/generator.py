@@ -93,11 +93,8 @@ class Munge:
         replace = rows < n_samples
         num_features = X.shape[1]
 
-        sample_rng = np.random.RandomState(_new_seed(self.seed, 0))
-        feature_rng = np.random.RandomState(_new_seed(self.seed, 1))
-        value_rng = np.random.RandomState(_new_seed(self.seed, 2))
-
-        row_ids = sample_rng.choice(rows, n_samples, replace=replace)
+        rng = np.random.RandomState(self.seed)
+        row_ids = rng.choice(rows, n_samples, replace=replace)
 
         sampled_data = X[row_ids, :]
         argmin, _ = pairwise_distances(
@@ -106,12 +103,12 @@ class Munge:
             nearest_idx = argmin[i]
             nearest = X[nearest_idx]
             for feature_idx in range(num_features):
-                if feature_rng.rand() < self.p:
+                if rng.rand() < self.p:
                     if feature_idx not in binary_cats:
                         old = sampled_data[i, feature_idx]
                         new = nearest[feature_idx]
                         sd = np.abs(old - new) / self.s
-                        sampled_data[i, feature_idx] = value_rng.normal(
+                        sampled_data[i, feature_idx] = rng.normal(
                             new, sd)
                     else:
                         sampled_data[i, feature_idx] = new
@@ -120,9 +117,3 @@ class Munge:
         if self.categorical_features:
             x_new = self._freq_enc.inverse_transform(x_new)
         return x_new
-
-
-def _new_seed(seed, increment):
-    if seed is None:
-        return None
-    return seed + increment
