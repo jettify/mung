@@ -15,6 +15,7 @@ def read(f):
 
 
 install_requires = [
+    'scikit-learn==0.20.3',
 ]
 extras_require = {}
 
