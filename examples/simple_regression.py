@@ -1,6 +1,8 @@
 import numpy as np
 import lightgbm as lgb
 
+import tensorflow as tf
+from keras import backend as K
 from keras.layers import Dense
 from keras.layers.normalization import BatchNormalization
 from keras.models import Sequential
@@ -12,6 +14,14 @@ from mung.utils import load_boston
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import MinMaxScaler
+
+# make results reprocducable, Kerad does not support seeds
+# explicitly properly
+np.random.seed(42)
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,
+                              inter_op_parallelism_threads=1)
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+K.set_session(sess)
 
 
 def fit_lgbm_model(X_train, y_train, X_test, y_test, seed=None):
@@ -96,6 +106,26 @@ def fit_approx_keras_model(X_train, y_train, X_test, y_test, clf, seed=None):
     kr.fit(X_train, y_train)
 
     keras_mse = mean_squared_error(y_test, kr.predict(X_test))
+    print(f'Keras with Approximation MSE: {keras_mse}')
+    return kr
+
+
+def fit_keras_model(X_train, y_train, X_test, y_test, seed=None):
+    scaler = MinMaxScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    kr = KerasRegressor(
+        build_fn=make_model,
+        input_size=X_train.shape[1],
+        epochs=256,
+        batch_size=200,
+        hidden_layer_size=12,
+    )
+    kr.fit(X_train, y_train)
+
+    keras_mse = mean_squared_error(y_test, kr.predict(X_test))
     print(f'Keras MSE: {keras_mse}')
     return kr
 
@@ -104,8 +134,9 @@ def main():
     seed = 42
     X_train, y_train, X_test, y_test = load_boston(seed=seed)
     clf = fit_lgbm_model(X_train, y_train, X_test, y_test, seed=seed)
+    kr = fit_keras_model(X_train, y_train, X_test, y_test, seed=seed)
     kra = fit_approx_keras_model(X_train, y_train, X_test, y_test, clf, seed=seed)
-    assert (clf, kr)
+    assert (clf, kra, kr)
 
 
 if __name__ == '__main__':
