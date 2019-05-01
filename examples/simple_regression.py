@@ -1,6 +1,8 @@
 import numpy as np
 import lightgbm as lgb
 
+from hyperopt import hp, tpe
+from hyperopt.fmin import fmin
 import tensorflow as tf
 from keras import backend as K
 from keras.layers import Dense
@@ -27,23 +29,59 @@ def set_global_seeds(seed=42):
 
 
 def fit_lgbm_model(X_train, y_train, X_test, y_test, seed=None):
-    params = {
-        'num_boost_round': [800],
-        'n_estimators': [200, 300],
-        'learning_rate': [0.05],
-        'max_depth': [2, 3],
-        'random_state': [seed],
-        'metric': ['l2'],
+
+
+    def objective(params):
+        params = {
+            #'n_estimators': int(params['n_estimators']),
+            #'learning_rate': params['learning_rate'],
+            #'num_leaves': int(params['num_leaves']),
+            #'max_bin': int(params['max_bin']),
+            'colsample_bytree': '{:.3f}'.format(params['colsample_bytree']),
+        }
+        print(params)
+
+        clf = lgb.LGBMRegressor(
+            metrics=['rmse'],
+            #num_iterations=5000,
+            #learning_rate=0.005,
+            n_estimators=157,
+            num_leaves=8,
+            random_state=3,
+            **params
+        )
+        clf.fit(X_train, y_train, verbose=0)
+
+        lgbm_mse = mean_squared_error(y_test, clf.predict(X_test))
+        print(f'LGBM MSE: {lgbm_mse}')
+        return lgbm_mse
+
+    space = {
+        #'n_estimators': hp.uniform('n_estimators', 100, 1000),
+        #'num_iterations': hp.uniform('num_iterations', 1000, 50000),
+        #'num_leaves': hp.quniform('num_leaves', 8, 256, 2),
+        #'max_bin': hp.quniform('max_bin', 8, 512, 2),
+        #'random_state': hp.choice('random_state', [0, 8, 100, 1234, 42]),
+        'colsample_bytree': hp.uniform('colsample_bytree', 0.3, 1.0),
     }
-    regressor = lgb.LGBMRegressor()
-    clf = GridSearchCV(regressor, params, cv=5)
-    grid_result = clf.fit(X_train, y_train)
-    score_ = grid_result.best_score_
-    prams_ = grid_result.best_params_
-    print("LGBM Best: {} using {}".format(score_, prams_))
+
+    best = fmin(fn=objective, space=space, algo=tpe.suggest, max_evals=100)
+    print(best)
+    import ipdb
+    ipdb.set_trace()
+    params = {'n_estimators': 157, 'num_leaves': 8}
+    clf = lgb.LGBMRegressor(
+        random_state=seed,
+        metrics=['rmse'],
+        **params
+    )
+    clf.fit(X_train, y_train, verbose=100)
+
+    import ipdb
+    ipdb.set_trace()
     lgbm_mse = mean_squared_error(y_test, clf.predict(X_test))
     print(f'LGBM MSE: {lgbm_mse}')
-    return clf.best_estimator_
+    return clf
 
 
 def make_model(

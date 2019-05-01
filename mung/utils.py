@@ -49,7 +49,7 @@ def load_boston(seed=None):
     return X_train, y_train, X_test, y_test
 
 
-def load_adult(seed=None):
+def load_adult(seed=None, test_size=0.6,):
     dtypes = [
         ('Age', 'float32'),
         ('Workclass', 'category'),
@@ -95,5 +95,5 @@ def load_adult(seed=None):
 
     X = transformer.fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.6, random_state=seed)
+        X, y, test_size=test_size, random_state=seed)
     return X_train, X_test, y_train, y_test
